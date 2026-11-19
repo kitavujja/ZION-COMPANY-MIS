@@ -1,0 +1,22 @@
+DROP DATABASE IF EXISTS zion_mis_db;
+CREATE DATABASE zion_mis_db CHARACTER SET utf8mb4;
+USE zion_mis_db;
+CREATE TABLE users(id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) NOT NULL, password_hash VARCHAR(255) NOT NULL, 
+role ENUM('customer','sales','technician','ceo') NOT NULL, full_name VARCHAR(100) NOT NULL, contact VARCHAR(30), email VARCHAR(120), 
+location VARCHAR(150), active TINYINT DEFAULT 1, UNIQUE KEY uq_user_role(username,role)) ENGINE=InnoDB;
+CREATE TABLE products(id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, category VARCHAR(60), unit_price DECIMAL(14,2) NOT NULL, stock_qty INT DEFAULT 0,
+ reorder_level INT DEFAULT 5) ENGINE=InnoDB;
+CREATE TABLE orders(id INT AUTO_INCREMENT PRIMARY KEY, customer_id INT NOT NULL, service_type ENUM('Installation','Maintenance') NOT NULL, 
+site_location VARCHAR(200) NOT NULL, description TEXT, status ENUM('Pending','Assigned','Surveyed','Sold','Completed') DEFAULT 'Pending', technician_id INT NULL, 
+survey_notes TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(customer_id) REFERENCES users(id) ON DELETE CASCADE, 
+FOREIGN KEY(technician_id) REFERENCES users(id) ON DELETE SET NULL) ENGINE=InnoDB;
+CREATE TABLE order_items(id INT AUTO_INCREMENT PRIMARY KEY, order_id INT NOT NULL, product_id INT NOT NULL, qty INT NOT NULL, unit_price DECIMAL(14,2) NOT NULL, 
+FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE, FOREIGN KEY(product_id) REFERENCES products(id)) ENGINE=InnoDB;
+CREATE TABLE sales(id INT AUTO_INCREMENT PRIMARY KEY, order_id INT UNIQUE NOT NULL, products_total DECIMAL(14,2), survey_fee DECIMAL(14,2), install_fee DECIMAL(14,2),
+ total DECIMAL(14,2), sale_date DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE) ENGINE=InnoDB;
+CREATE TABLE purchases(id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, qty INT NOT NULL, unit_cost DECIMAL(14,2) NOT NULL,
+ purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE) ENGINE=InnoDB;
+CREATE TABLE expenses(id INT AUTO_INCREMENT PRIMARY KEY, description VARCHAR(200) NOT NULL, amount DECIMAL(14,2) NOT NULL, expense_date DATE NOT NULL) ENGINE=InnoDB;
+CREATE TABLE reviews(id INT AUTO_INCREMENT PRIMARY KEY, order_id INT UNIQUE NOT NULL, customer_id INT NOT NULL, rating TINYINT NOT NULL, comment TEXT, 
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE, 
+FOREIGN KEY(customer_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB;
